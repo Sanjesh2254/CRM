@@ -64,7 +64,7 @@ class Contact(models.Model):
     email_id = models.EmailField(max_length=255, null=True, blank=True)
     lead_source = models.ForeignKey(Lead_Source, on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_on = models.DateField()
+    created_on = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -75,7 +75,7 @@ class Lead_Assignment(models.Model):
     lead = models.ForeignKey(Lead, on_delete=models.CASCADE)
     assigned_to = models.ForeignKey(User, related_name='assigned_leads', on_delete=models.CASCADE)
     assigned_by = models.ForeignKey(User, related_name='assigned_by_leads', on_delete=models.CASCADE)
-    assigned_on = models.DateField()
+    assigned_on = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -90,7 +90,7 @@ class Log(models.Model):
     details = models.TextField(null=True, blank=True)
     file = models.FileField(upload_to='logs_files', null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_on = models.DateField()
+    created_on = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     logtype = models.CharField(max_length=10, choices=[('M', 'Manual'), ('A', 'Automatic')], default='M')
 
@@ -103,7 +103,7 @@ class Task(models.Model):
     task_date_time = models.DateTimeField()
     task_detail = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_on = models.DateField()
+    created_on = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -114,7 +114,7 @@ class Task_Assignment(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     assigned_to = models.ForeignKey(User, related_name='task_assignments', on_delete=models.CASCADE)
     assigned_by = models.ForeignKey(User, related_name='assigned_tasks', on_delete=models.CASCADE)
-    assigned_on = models.DateField()
+    assigned_on = models.DateField(auto_now_add=True)
     assignment_note = models.TextField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
@@ -134,7 +134,7 @@ class Opportunity(models.Model):
     probability_in_percentage = models.FloatField()
     file = models.FileField(upload_to='opportunity_files', null=True, blank=True)
     created_by = models.ForeignKey(User, related_name='created_opportunities', on_delete=models.CASCADE)
-    created_on = models.DateField()
+    created_on = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -155,7 +155,7 @@ class Note(models.Model):
     opportunity = models.ForeignKey(Opportunity, related_name='notes', on_delete=models.CASCADE)
     note = models.TextField(null=True, blank=True)
     note_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    note_on = models.DateField()
+    note_on = models.DateField(auto_now_add=True)
 
     def __str__(self):
         return f'Note for {self.opportunity.name}'
