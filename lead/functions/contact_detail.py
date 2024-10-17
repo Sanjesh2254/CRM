@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from ..models import Contact  # Import the Contact model
-from ..serializers.contactserializer import ContactSerializer  # Import the serializer
+from lead.serializers.contactserializer import ContactSerializer # Import the serializer
 
 def get_contact_detail(contact_id):
     try:
