@@ -1,8 +1,7 @@
 from rest_framework import serializers
-from lead.models import Contact
+from ..models import Contact  # Import the Contact model
 
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = '__all__'
-        
