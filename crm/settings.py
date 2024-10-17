@@ -10,6 +10,15 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Access the variables
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -81,7 +90,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'crm',
         'USER': 'root',
-        'PASSWORD': '0912',
+        'PASSWORD': f'{DB_PASSWORD}',
         'HOST': 'localhost',
         'PORT': '3306'
     }
