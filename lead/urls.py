@@ -4,8 +4,8 @@ from .views import *
 urlpatterns = [
     # *******Sanjesh*******
     path('contacts/create/',Contact_Create.as_view(), name='contact-create'),
-    path('contacts/Delete/<int:pk>/',Contact_Delete.as_view(), name='contact-delete'),
-    path('contacts/Update/<int:pk>/',Contact_Update.as_view(), name='contact-update'),
+    path('contacts/Delete/<int:contact_id>/',Contact_Delete.as_view(), name='contact-delete'),
+    path('contacts/Update/<int:contact_id>/',Contact_Update.as_view(), name='contact-update'),
     # ********Afsal********
     path('employees/', EmployeeListView.as_view()),  # Employee dropdown API
     path('lead/<int:lead_id>/assign/', LeadAssignmentView.as_view()),  # Lead assignment API

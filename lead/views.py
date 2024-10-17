@@ -27,9 +27,9 @@ class Contact_Create(APIView):
 
 class Contact_Delete(APIView):
 
-    def put(self, request, pk):
+    def put(self, request,contact_id):
         try:
-            contact = Contact.objects.get(pk=pk)
+            contact = Contact.objects.get(contact_id=contact_id)
             contact.is_active=False
             contact.save()
             return Response({"message": "Contact deactivate"}, status=status.HTTP_204_NO_CONTENT)
@@ -47,9 +47,9 @@ class Contact_Delete(APIView):
 
 class Contact_Update(APIView): 
   
- def post(self,request, pk):
+ def post(self,request,contact_id):
     try:
-        contact = Contact.objects.get(pk=pk)
+        contact = Contact.objects.get(contact_id=contact_id)
         serializer = ContactSerializer(contact, data=request.data)
 
         if serializer.is_valid():

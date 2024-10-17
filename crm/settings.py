@@ -11,13 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 import os
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Access the variables
-DB_PASSWORD = os.getenv('DB_PASSWORD')
 
 from pathlib import Path
 
@@ -90,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'crm',
         'USER': 'root',
-        'PASSWORD': f'{DB_PASSWORD}',
+        'PASSWORD':'Sanjesh@22',
         'HOST': 'localhost',
         'PORT': '3306'
     }
