@@ -75,7 +75,13 @@ class Contact_Update(APIView):
 from .functions.employee_list import get_employee_list
 from .functions.lead_assignment import post_lead_assignment
 from .functions.contact_detail import get_contact_detail
-    # Employee List View
+from .functions.log_create import create_log
+from .functions.log_edit import edit_log_and_task
+from .functions.log_delete import delete_log_and_task
+from .functions.log_stage_list import get_log_stages
+
+
+# Employee List View
 class EmployeeListView(APIView):
     def get(self, request):
         return get_employee_list(request)
@@ -90,7 +96,25 @@ class ContactDetailView(APIView):
     def get(self, request, contact_id):
         return get_contact_detail(contact_id)
 
+# Log and Task creation view
+class LogCreateView(APIView):
+    def post(self, request, contact_id):
+        return create_log(request, contact_id)
 
+# Edit Log and Task
+class LogEditView(APIView):
+    def put(self, request, log_id):
+        return edit_log_and_task(request, log_id)
+
+# Delete Log and Task
+class LogDeleteView(APIView):
+    def delete(self, request, log_id):
+        return delete_log_and_task(request, log_id)
+    
+# Calling log_status for creating Log
+class LogStageListView(APIView):
+    def get(self, request):
+        return get_log_stages(request)
 
 #--------sankar----------
 

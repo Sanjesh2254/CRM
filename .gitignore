@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Python
 *.pyc
 *.pyo
@@ -74,7 +73,5 @@ dmypy.json
 # Other
 *.bak
 *.tmp
-=======
 views.py
 urls.py
->>>>>>> 7c3e4916920c0211c2e3560f64cd94b97be81e3f
