@@ -69,8 +69,7 @@ class Contact_Update(APIView):
 
 
 
-
-    # ***********Afsal******
+# ***********Afsal******
 from django.http import JsonResponse
 import json
 from .models import Log_Stage, Log, Task, Lead_Assignment
@@ -106,8 +105,10 @@ class LeadAssignmentView(APIView):
         # Iterate through selected users and create Lead_Assignment records
         for user_id in assigned_to_ids:
             try:
-                user = User.objects.get(id=user_id)
-                Lead_Assignment.objects.create(lead=lead, assigned_to=user, assigned_by=request.user)  # assigned_by=assigned_by_user (for hard-coded checking)
+                users = User.objects.filter(id__in=assigned_to_ids)
+                if users.count() != len(assigned_to_ids):
+                    return JsonResponse({"message": "Some users not found"}, status=404)
+                Lead_Assignment.objects.create(lead=lead, assigned_to=users, assigned_by=request.user)  # assigned_by=assigned_by_user (for hard-coded checking)
             except User.DoesNotExist:
                 return JsonResponse({"message": f"User {user_id} not found"}, status=404)
 
@@ -134,11 +135,9 @@ class LogManagement(APIView):
         except Contact.DoesNotExist:
             return JsonResponse({'message': 'Contact not found'}, status=404)
 
-        try:
-            data = request.data
-        except json.JSONDecodeError:
-            return JsonResponse({'message': 'Invalid JSON data'}, status=400)
-
+        
+        data = request.data
+        
         log_stage_id = data.get('log_stage')
         try:
             log_stage = Log_Stage.objects.get(id=log_stage_id)
@@ -243,7 +242,6 @@ class LogManagement(APIView):
 
         return JsonResponse(log_serializer.errors, status=400)
 
-
     # Delete Log and Task
     def delete(self, request, id):
         try:
@@ -263,26 +261,22 @@ class LogManagement(APIView):
 
         return JsonResponse({'message': 'Log and Task deleted successfully'}, status=200)
 
-
 # Calling log_status for creating Log
 class LogStageListView(APIView):
     def get(self, request):
-        if request.method == 'GET':
             log_stages = Log_Stage.objects.filter(is_active=True)  
             serializer = LogStageSerializer(log_stages, many=True)
             return JsonResponse(serializer.data, status=200, safe=False)
-        else:
-            return JsonResponse({'message': 'Invalid request method'}, status=405)
-
+        
 #Calling all the logs in a Lead
 class logsbyLeadsView(APIView):
     def get(self, request, lead_id):
         try:
             contacts = Contact.objects.filter(lead_id=lead_id)
-            logs = Log.objects.filter(conatct__in=contacts)
+            logs = Log.objects.filter(contact__in=contacts)
 
-            log_serialier = LogSerializer(logs, many=True)
-            return JsonResponse(log_serialier.data, safe = False, statsus =200)
+            log_serializer = LogSerializer(logs, many=True)
+            return JsonResponse(log_serializer.data, safe = False, status=200)
         except Contact.DoesNotExist:
             return JsonResponse({'message': 'No contacts found for this lead'}, status = 404)
 
@@ -294,7 +288,7 @@ class logsbyContactsView(APIView):
             log_serializer =  LogSerializer(logs, many=True)
             return JsonResponse(log_serializer.data, safe=False, status=200)
         except Log.DoesNotExist:
-            return JsonResponse({'message': 'Log does no exist'}, status =404)
+            return JsonResponse({'message': 'Log does not exist'}, status =404)
     
 
 #--------sankar----------
