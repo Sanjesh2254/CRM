@@ -32,11 +32,11 @@ def edit_log_and_task(request, log_id):
                     task_data = {
                         'contact': log.contact.id,
                         'log': log.id,
-                        'task_date_time': follow_up_date_time,  # Use new follow_up_date_time
-                        'task_detail': log.details,  # Use log details (updated or existing)
-                        'created_by': log.created_by.id,  # Use the same user who created the log
+                        'task_date_time': follow_up_date_time,
+                        'task_detail': log.details,  
+                        'created_by': log.created_by.id,  
                         'is_active': True,
-                        'tasktype': 'A',  # Assuming it's an automatic task
+                        'tasktype': 'A',
                     }
                     task_serializer = TaskSerializer(data=task_data)
                     if task_serializer.is_valid():

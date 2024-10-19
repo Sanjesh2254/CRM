@@ -79,6 +79,9 @@ from .functions.log_create import create_log
 from .functions.log_edit import edit_log_and_task
 from .functions.log_delete import delete_log_and_task
 from .functions.log_stage_list import get_log_stages
+from .functions.logs_by_lead import get_logs_by_lead
+from .functions.logs_by_contact import get_logs_by_contact
+
 
 
 # Employee List View
@@ -115,6 +118,17 @@ class LogDeleteView(APIView):
 class LogStageListView(APIView):
     def get(self, request):
         return get_log_stages(request)
+
+#Calling all the logs in a Lead
+class logsbyLeadsView(APIView):
+    def get(self, request, lead_id):
+        return get_logs_by_lead(request, lead_id)
+
+#calling all the logs of a Contact
+class logsbyContactsView(APIView):
+    def get(self, request, contact_id):
+        return get_logs_by_contact(request, contact_id)
+    
 
 #--------sankar----------
 
