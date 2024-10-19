@@ -100,11 +100,13 @@ class Log(models.Model):
 
 class Task(models.Model):
     contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
+    log = models.ForeignKey(Log, on_delete=models.CASCADE, null=True, blank=True)
     task_date_time = models.DateTimeField()
     task_detail = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_on = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    tasktype = models.CharField(max_length=10, choices=[('M', 'Manual'), ('A', 'Automatic')])
 
     def __str__(self):
         return f'Task for {self.contact.name}'

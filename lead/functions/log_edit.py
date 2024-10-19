@@ -20,22 +20,44 @@ def edit_log_and_task(request, log_id):
         if log_serializer.is_valid():
             log = log_serializer.save()  # Save the updated log
 
-            # Now update the corresponding Task
-            try:
-                task = Task.objects.get(contact=log.contact, created_by=log.created_by)
-            except Task.DoesNotExist:
-                return JsonResponse({'message': 'Task not found'}, status=404)
+            # Check if the follow_up_date_time is in the PUT request
+            follow_up_date_time = data.get('follow_up_date_time')
+            
+            if follow_up_date_time:
+                try:
+                    # Try to get a task associated with this log
+                    task = Task.objects.get(log=log)
+                except Task.DoesNotExist:
+                    # If no task exists, create a new one
+                    task_data = {
+                        'contact': log.contact.id,
+                        'log': log.id,
+                        'task_date_time': follow_up_date_time,  # Use new follow_up_date_time
+                        'task_detail': log.details,  # Use log details (updated or existing)
+                        'created_by': log.created_by.id,  # Use the same user who created the log
+                        'is_active': True,
+                        'tasktype': 'A',  # Assuming it's an automatic task
+                    }
+                    task_serializer = TaskSerializer(data=task_data)
+                    if task_serializer.is_valid():
+                        task_serializer.save()
+                        return JsonResponse({'message': 'Log updated and new Task created successfully'}, status=200)
+                    else:
+                        return JsonResponse(task_serializer.errors, status=400)
+                
+                # If task already exists, update it
+                task_data = {
+                    'task_date_time': follow_up_date_time,
+                    'task_detail': log.details  # Update task with new log details
+                }
+                task_serializer = TaskSerializer(task, data=task_data, partial=True)
+                if task_serializer.is_valid():
+                    task_serializer.save()
+                    return JsonResponse({'message': 'Log and Task updated successfully'}, status=200)
+                return JsonResponse(task_serializer.errors, status=400)
+            else:
+                return JsonResponse({'message': 'Log updated successfully, no task changes'}, status=200)
 
-            # Update task details based on the updated log
-            task_data = {
-                'task_date_time': log.follow_up_date_time,
-                'task_detail': log.details
-            }
-            task_serializer = TaskSerializer(task, data=task_data, partial=True)
-            if task_serializer.is_valid():
-                task_serializer.save()
-                return JsonResponse({'message': 'Log and Task updated successfully'}, status=200)
-            return JsonResponse(task_serializer.errors, status=400)
         return JsonResponse(log_serializer.errors, status=400)
     else:
         return JsonResponse({'message': 'Invalid request method'}, status=405)
