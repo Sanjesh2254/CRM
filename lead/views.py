@@ -73,33 +73,55 @@ class Contact_Update(APIView):
     # ***********Afsal******
 from django.http import JsonResponse
 import json
-from .models import Log_Stage, Log, Task
+from .models import Log_Stage, Log, Task, Lead_Assignment
 from django.contrib.auth.models import User
 from .serializers.logserializer import LogSerializer
 from .serializers.taskserializer import TaskSerializer
-from .functions.employee_list import get_employee_list
-from .functions.lead_assignment import post_lead_assignment
-from .functions.contact_detail import get_contact_detail
-from .functions.log_stage_list import get_log_stages
-from .functions.logs_by_lead import get_logs_by_lead
-from .functions.logs_by_contact import get_logs_by_contact
-
+from .serializers.employeeserializer import EmployeeSerializer
+from .serializers.logstageserializer import LogStageSerializer
 
 
 # Employee List View
 class EmployeeListView(APIView):
     def get(self, request):
-        return get_employee_list(request)
+        employees = User.objects.all()
+        serializer = EmployeeSerializer(employees, many=True)
+        return JsonResponse(serializer.data, safe=False, status=200)
 
 # Lead Assignment View
 class LeadAssignmentView(APIView):
     def post(self, request, lead_id):
-        return post_lead_assignment(request, lead_id)
+        # assigned_by_user = User.objects.get(id=3)
+        try:
+            lead = Lead.objects.get(id=lead_id)
+        except Lead.DoesNotExist:
+            return JsonResponse({"message": "Lead not found"}, status=404)
+        
+        data = json.loads(request.body)
+        assigned_to_ids = data.get('assigned_to')  # Expecting list of user IDs
+
+        if not assigned_to_ids:
+            return JsonResponse({"message": "No employees selected"}, status=400)
+
+        # Iterate through selected users and create Lead_Assignment records
+        for user_id in assigned_to_ids:
+            try:
+                user = User.objects.get(id=user_id)
+                Lead_Assignment.objects.create(lead=lead, assigned_to=user, assigned_by=request.user)  # assigned_by=assigned_by_user (for hard-coded checking)
+            except User.DoesNotExist:
+                return JsonResponse({"message": f"User {user_id} not found"}, status=404)
+
+        return JsonResponse({"message": "Lead assigned successfully"}, status=201)
     
 # Call the function to get contact detail
 class ContactDetailView(APIView):
     def get(self, request, contact_id):
-        return get_contact_detail(contact_id)
+        try:
+            contact = Contact.objects.get(id=contact_id)  # Fetch the contact by ID
+            serializer = ContactSerializer(contact)
+            return JsonResponse(serializer.data, status=200)
+        except Contact.DoesNotExist:
+            return JsonResponse({"message": "Contact not found"}, status=404)
 
 # Creating, Editing, Deleting Log and Task
 class LogManagement(APIView):
@@ -241,22 +263,38 @@ class LogManagement(APIView):
 
         return JsonResponse({'message': 'Log and Task deleted successfully'}, status=200)
 
-#***********************************************************************************
 
 # Calling log_status for creating Log
 class LogStageListView(APIView):
     def get(self, request):
-        return get_log_stages(request)
+        if request.method == 'GET':
+            log_stages = Log_Stage.objects.filter(is_active=True)  
+            serializer = LogStageSerializer(log_stages, many=True)
+            return JsonResponse(serializer.data, status=200, safe=False)
+        else:
+            return JsonResponse({'message': 'Invalid request method'}, status=405)
 
 #Calling all the logs in a Lead
 class logsbyLeadsView(APIView):
     def get(self, request, lead_id):
-        return get_logs_by_lead(request, lead_id)
+        try:
+            contacts = Contact.objects.filter(lead_id=lead_id)
+            logs = Log.objects.filter(conatct__in=contacts)
+
+            log_serialier = LogSerializer(logs, many=True)
+            return JsonResponse(log_serialier.data, safe = False, statsus =200)
+        except Contact.DoesNotExist:
+            return JsonResponse({'message': 'No contacts found for this lead'}, status = 404)
 
 #calling all the logs of a Contact
 class logsbyContactsView(APIView):
     def get(self, request, contact_id):
-        return get_logs_by_contact(request, contact_id)
+        try:
+            logs = Log.objects.filter(contact_id=contact_id)
+            log_serializer =  LogSerializer(logs, many=True)
+            return JsonResponse(log_serializer.data, safe=False, status=200)
+        except Log.DoesNotExist:
+            return JsonResponse({'message': 'Log does no exist'}, status =404)
     
 
 #--------sankar----------
