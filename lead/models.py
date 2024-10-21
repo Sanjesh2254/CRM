@@ -125,6 +125,7 @@ class Task_Assignment(models.Model):
 
 
 class Opportunity(models.Model):
+    lead = models.ForeignKey(Lead, null=True, blank=True, on_delete=models.SET_NULL)
     name = models.CharField(max_length=255)
     owner = models.ForeignKey(User, related_name='opportunities_owned', on_delete=models.CASCADE)
     stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
