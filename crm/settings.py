@@ -28,9 +28,25 @@ SECRET_KEY = 'django-insecure-gg@e3i*3+)!&e9fa9h887uuxxjc9@1!=gk(71ej=7&k31hf%7v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['121.200.52.133', 'localhost', '127.0.0.1']
 
+CORS_ALLOW_ALL_ORIGINS = True
 
+CORS_ALLOW_METHODS=[
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+]
+
+CORS_ALLOW_HEADERS=[
+    'content-type',
+    'authorization',
+    'x-requested-with',
+    'accept',
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -43,11 +59,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'lead',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -79,23 +97,23 @@ WSGI_APPLICATION = 'crm.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'crm',
-        'USER': 'root',
-        'PASSWORD':'Sanjesh@22',
-        'HOST': 'localhost',
-        'PORT': '3306'
-    }
-}
-
 # DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": "mydatabase",
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'crm',
+#         'USER': 'root',
+#         'PASSWORD':'Sanjesh@22',
+#         'HOST': 'localhost',
+#         'PORT': '3306'
 #     }
 # }
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "mydatabase",
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -132,6 +150,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
