@@ -74,7 +74,7 @@ from django.http import JsonResponse
 import json
 from .models import Log_Stage, Log, Task, Lead_Assignment
 from django.contrib.auth.models import User
-from .serializers.logserializer import LogSerializer
+from .serializers.logserializer import LogCreateUpdateSerializer, LogReadSerializer
 from .serializers.taskserializer import TaskSerializer
 from .serializers.employeeserializer import EmployeeSerializer
 from .serializers.logstageserializer import LogStageSerializer
@@ -155,7 +155,7 @@ class LogManagement(APIView):
             'created_by': created_by_user.id,
         }
 
-        log_serializer = LogSerializer(data=log_data)
+        log_serializer = LogCreateUpdateSerializer(data=log_data)
         if log_serializer.is_valid():
             log = log_serializer.save()  # Save the log
 
@@ -189,7 +189,7 @@ class LogManagement(APIView):
             return JsonResponse({'message': 'Log not found'}, status=404)
 
         data = request.data
-        log_serializer = LogSerializer(log, data=data, partial=True)
+        log_serializer = LogCreateUpdateSerializer(log, data=data, partial=True)
 
         if log_serializer.is_valid():
             log = log_serializer.save()
@@ -273,7 +273,7 @@ class logsbyLeadsView(APIView):
             contacts = Contact.objects.filter(lead_id=lead_id)
             logs = Log.objects.filter(contact__in=contacts, is_active = True)
 
-            log_serializer = LogSerializer(logs, many=True)
+            log_serializer = LogReadSerializer(logs, many=True)
             return JsonResponse(log_serializer.data, safe = False, status=200)
         except Contact.DoesNotExist:
             return JsonResponse({'message': 'No contacts found for this lead'}, status = 404)
@@ -283,7 +283,7 @@ class logsbyContactView(APIView):
     def get(self, request, contact_id):
         try:
             logs = Log.objects.filter(contact_id=contact_id, is_active = True)
-            log_serializer =  LogSerializer(logs, many=True)
+            log_serializer =  LogReadSerializer(logs, many=True)
             return JsonResponse(log_serializer.data, safe=False, status=200)
         except Log.DoesNotExist:
             return JsonResponse({'message': 'Log does not exist'}, status =404)
