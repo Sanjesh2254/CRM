@@ -90,7 +90,7 @@ class EmployeeListView(APIView):
 # Lead Assignment View
 class LeadAssignmentView(APIView):
     def post(self, request, lead_id):
-        # assigned_by_user = User.objects.get(id=3)
+        assigned_by_user = User.objects.get(id=3)
         try:
             lead = Lead.objects.get(id=lead_id)
         except Lead.DoesNotExist:
@@ -105,10 +105,8 @@ class LeadAssignmentView(APIView):
         # Iterate through selected users and create Lead_Assignment records
         for user_id in assigned_to_ids:
             try:
-                users = User.objects.filter(id__in=assigned_to_ids)
-                if users.count() != len(assigned_to_ids):
-                    return JsonResponse({"message": "Some users not found"}, status=404)
-                Lead_Assignment.objects.create(lead=lead, assigned_to=users, assigned_by=request.user)  # assigned_by=assigned_by_user (for hard-coded checking)
+                user = User.objects.get(id=user_id)  # Get a single user instance
+                Lead_Assignment.objects.create(lead=lead, assigned_to=user, assigned_by=assigned_by_user)  # Create a record for each user
             except User.DoesNotExist:
                 return JsonResponse({"message": f"User {user_id} not found"}, status=404)
 
@@ -273,7 +271,7 @@ class logsbyLeadsView(APIView):
     def get(self, request, lead_id):
         try:
             contacts = Contact.objects.filter(lead_id=lead_id)
-            logs = Log.objects.filter(contact__in=contacts)
+            logs = Log.objects.filter(contact__in=contacts, is_active = True)
 
             log_serializer = LogSerializer(logs, many=True)
             return JsonResponse(log_serializer.data, safe = False, status=200)
@@ -281,10 +279,10 @@ class logsbyLeadsView(APIView):
             return JsonResponse({'message': 'No contacts found for this lead'}, status = 404)
 
 #calling all the logs of a Contact
-class logsbyContactsView(APIView):
+class logsbyContactView(APIView):
     def get(self, request, contact_id):
         try:
-            logs = Log.objects.filter(contact_id=contact_id)
+            logs = Log.objects.filter(contact_id=contact_id, is_active = True)
             log_serializer =  LogSerializer(logs, many=True)
             return JsonResponse(log_serializer.data, safe=False, status=200)
         except Log.DoesNotExist:

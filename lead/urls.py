@@ -11,8 +11,10 @@ urlpatterns = [
     path('lead/<int:lead_id>/assign/', LeadAssignmentView.as_view()),  # Lead assignment API
     path('contact/<int:contact_id>/', ContactDetailView.as_view()),  # API for retrieving a specific 
     path('log/<int:id>/', LogManagement.as_view(), name='LogManagement'), # API for Creating, Editing, Deleting Log and Task
-
     path('log_stages/', LogStageListView.as_view(), name='log-stage-list'),  # Log Stages Dropdown API
+    path('leadlog/<int:lead_id>/', logsbyLeadsView.as_view(), name='log-stage-list'),  # API for all the Logs under a Lead
+    path('contactlog/<int:contact_id>/', logsbyContactView.as_view(), name='log-stage-list'),  # API for all the Logs under a Contact
+
     #--------sankar----
     path('filter/leads/', leadfilterView.as_view(), name='lead-filter'),
     #------sabari-----

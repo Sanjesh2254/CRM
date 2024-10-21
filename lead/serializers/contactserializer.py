@@ -21,4 +21,4 @@ class ContactSerializer(serializers.ModelSerializer):
         return obj.lead_source.source if obj.lead_source else None
 
     def get_created_by(self, obj):
-        return obj.created_by.first_name if obj.created_by else None
+        return obj.created_by.get_full_name() if obj.created_by else None
