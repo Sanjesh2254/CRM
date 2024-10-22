@@ -11,11 +11,14 @@ urlpatterns = [
     path('dropdown/state/<int:country_id>/', DropdownListView.as_view(),name='state_drop_down'),
     #-by_SANKARMAHARAJAN
     path('filter_lead/', LeadFilterView.as_view(), name='lead-filter'),
+    path('report_lead/',ReportView.as_view(),name='report_leads'),
 
     # *******Sanjesh*******
-    path('contacts/create/',Contact_Create.as_view(), name='contact-create'),
-    path('contacts/Delete/<int:contact_id>/',Contact_Delete.as_view(), name='contact-delete'),
-    path('contacts/Update/<int:contact_id>/',Contact_Update.as_view(), name='contact-update'),
+    path('contactdetails/', ContactView.as_view(),name='contact_details'), # For creating and listing all contacts
+    path('contactdetails/<int:contact_id>/', ContactView.as_view(),name='contact_details_by_id'),
+     path('contact-dropdown/', Contactdropdownlistview.as_view(), name='contact-dropdown'),
+
+
     # ********Afsal********
      path('employees/', EmployeeListView.as_view()),  # Employee dropdown API
     path('lead/<int:lead_id>/assign/', LeadAssignmentView.as_view()),  # Lead assignment API
@@ -26,5 +29,13 @@ urlpatterns = [
     path('contactlog/<int:contact_id>/', logsbyContactView.as_view(), name='log-stage-list'),  # API for all the Logs under a Contact
 
 
+ #-----------Sumith---------------
+    path('create-task/', CreateTaskView.as_view(), name='create-task'),
+    path('task/<int:id>/', TaskManagement.as_view(), name='task'),
+
+
+#---------vs-------------
+    path('opportunity/',Opportunity_create.as_view(), name="Opportunity_create"),
+    path('opportunity/<int:opportunity_id>/',Opportunity_ById.as_view(), name="Opportunity_ById"),
 
 ]

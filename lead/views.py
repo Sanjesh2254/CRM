@@ -6,13 +6,15 @@ from rest_framework.response import Response
 
 from lead.models import Contact
 from lead.serializers.contactserializer import ContactSerializer
+from lead.serializers.opportuinityserializer import OpportunitySerializer,PostOpportunitySerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers.leadserializer import PostLeadSerializer,  LeadSerializer,MarketSegmentSerializer,FocusSegmentSerializer,CountrySerializer,StateSerializer,EmpSerializer,TagSerializer
-from .models import Lead,Employee
-from accounts.models import Market_Segment,Focus_Segment,Country,State,Tag
+from .serializers.leadserializer import PostLeadSerializer,  LeadSerializer,MarketSegmentSerializer,FocusSegmentSerializer,CountrySerializer,StateSerializer,EmpSerializer,TagSerializer, VerticalSerializer
+from .models import Lead,Employee,Opportunity
+from accounts.models import Market_Segment,Focus_Segment,Country,State,Tag,Vertical,Contact_Status,Lead_Source
 from rest_framework.pagination import PageNumberPagination
+from .serializers.contactserializer import LeadSourceSerializer,ContactStatusSerializer
 #Lead Details
 
 
@@ -51,7 +53,7 @@ class LeadView(APIView):
         return Response({'error': 'lead_id is required for deactivation'}, status=status.HTTP_400_BAD_REQUEST)
     
     class LeadPagination(PageNumberPagination):
-        page_size = 20  
+        page_size = 10  
         page_size_query_param = 'page_size'
         max_page_size = 1000
 
@@ -114,6 +116,11 @@ class DropdownListView(APIView):
             serializer = EmpSerializer(employees, many=True)
             return Response(serializer.data)
         
+        elif dropdown_type=='vertical':
+            verticals = Vertical.objects.all()
+            serializer = VerticalSerializer(verticals, many=True)
+            return Response(serializer.data)
+        
 
         else:
             return Response({'error': 'Invalid dropdown type or missing parameters.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -127,7 +134,7 @@ from .models import Lead
 class LeadFilterView(APIView):
 
     class LeadPagination(PageNumberPagination):
-        page_size = 20 # Default page size
+        page_size = 10 # Default page size
         page_size_query_param = 'page_size'
         max_page_size = 1000  # You can set a maximum limit for page size
 
@@ -230,6 +237,263 @@ class LeadFilterView(APIView):
         except Exception as e:
             # Return error response in case of an issue
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+from datetime import datetime
+class ReportView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            body = request.data
+            leads = Lead.objects.all()
+            total_leads_count = leads.count()
+            date = body.get('date')
+            month = body.get('month')
+            year = body.get('year')
+            owner_id = body.get('owner_id')
+            created_by = body.get('created_by')
+            vertical_id = body.get('vertical_id')
+            focus_segment = body.get('focus_segment')
+            state = body.get('state')
+            country = body.get('country')
+            market_segment = body.get('market_segment')
+            if date:
+                try:
+                    date_obj = datetime.strptime(date, '%Y-%m-%d')
+                    leads = leads.filter(created_on=date_obj.date())
+                except ValueError:
+                        return Response({"error": "Invalid date format. Use 'YYYY-MM-DD'."}, status=status.HTTP_400_BAD_REQUEST)
+            elif month and year:
+                try:
+                    leads = leads.filter(created_on__year=year, created_on__month=month)
+                except ValueError:
+                    return Response({"error": "Invalid month/year format."}, status=status.HTTP_400_BAD_REQUEST)
+            elif month and not year:
+                try:
+                    leads = leads.filter(created_on__month=month)
+                except ValueError:
+                    return Response({"error": "Invalid month/year format."}, status=status.HTTP_400_BAD_REQUEST)
+            elif year:
+                leads = leads.filter(created_on__year=year)
+
+            # Apply filtering only for one field at a time
+            elif owner_id:
+                leads = leads.filter(lead_owner_id=owner_id)
+            elif created_by:
+                leads = leads.filter(created_by_id=created_by)
+            elif vertical_id:
+                leads = leads.filter(focus_segment__vertical_id=vertical_id)
+            elif focus_segment:
+                leads = leads.filter(focus_segment_id=focus_segment)
+            elif state:
+                leads = leads.filter(state_id=state)
+            elif country:
+                leads = leads.filter(country_id=country)
+            elif market_segment:
+                leads = leads.filter(market_segment_id=market_segment)
+
+            # Count the filtered leads
+            filtered_leads_count = leads.count()
+
+            return JsonResponse({
+                "total_leads_count": total_leads_count,
+                "filtered_count": filtered_leads_count
+            })
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+#--------------sumith--------
+
+
+from .models import Task, Contact, Task_Assignment
+from .serializers.taskserializer import TaskSerializer, GetTaskSerializer
+from django.utils.timezone import now, timedelta
+class CreateTaskView(APIView):
+    def post(self, request):
+        assigned_by_user = User.objects.get(id=2)
+        try:
+            contact_id = request.data.get('contact_id')  # Get contact ID from request body
+            log_id = Log.objects.get(id=request.data.get('log_id'))  # Get contact ID from request body
+            task_date_time = request.data.get('task_date_time')  # Get date and time
+            task_detail = request.data.get('task_detail')  # Get task details
+            task_type = 'M'  # Task type is manual
+
+            # Get the Contact object
+            contact = Contact.objects.get(id=contact_id)
+
+            # Create a task instance
+            task = Task.objects.create(
+                contact=contact,
+                log=log_id,
+                task_date_time=task_date_time,
+                task_detail=task_detail,
+                created_by=assigned_by_user,  # You can replace it with request.user for dynamic assignment
+                tasktype=task_type
+            )
+
+            serializer = TaskSerializer(task)
+            return Response({"message":"Task created sucessfully"}, status=status.HTTP_201_CREATED)
+
+        except Contact.DoesNotExist:
+            return Response({'error': 'Contact not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+#-----For PUT & DELETE (Is_active=false)-------------------------------------------------
+
+class TaskManagement(APIView):
+    def get(self, request, id):
+        try:
+            # Get the user object
+            user = User.objects.get(id=id)
+
+            # 1. Gather all tasks that are associated with leads owned by the user
+            leads_owned_by_user = Lead.objects.filter(lead_owner=user)
+            tasks_related_to_leads = Task.objects.filter(contact__lead__in=leads_owned_by_user)
+
+            # 2. Gather all tasks directly associated with the user (created_by or assigned_to)
+            tasks_created_by_user = Task.objects.filter(created_by=user)
+            tasks_assigned_to_user = Task_Assignment.objects.filter(assigned_to=user).values_list('task', flat=True)
+            tasks_assigned_to_user = Task.objects.filter(id__in=tasks_assigned_to_user)
+
+            # Combine both querysets and remove duplicates
+            all_tasks = tasks_related_to_leads | tasks_created_by_user | tasks_assigned_to_user
+            all_tasks = all_tasks.distinct()
+
+            # Current time and time ranges
+            today = now().date()
+            tomorrow = today + timedelta(days=1)
+            next_7_days = today + timedelta(days=7)
+
+            # Categorize tasks
+            tasks_today = all_tasks.filter(task_date_time__date=today)
+            tasks_tomorrow = all_tasks.filter(task_date_time__date=tomorrow)
+            tasks_next_7_days = all_tasks.filter(task_date_time__date__range=[tomorrow + timedelta(days=1), next_7_days])
+
+            # Serialize the tasks for each category
+            tasks_today_serialized = GetTaskSerializer(tasks_today, many=True).data
+            tasks_tomorrow_serialized = GetTaskSerializer(tasks_tomorrow, many=True).data
+            tasks_next_7_days_serialized = GetTaskSerializer(tasks_next_7_days, many=True).data
+
+            # Response data
+            response_data = {
+                'tasks_today': tasks_today_serialized,
+                'tasks_tomorrow': tasks_tomorrow_serialized,
+                'tasks_next_7_days': tasks_next_7_days_serialized,
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, id):
+        assigned_by_user = User.objects.get(id=2)  # Static assignment, change if needed
+        try:
+            # Retrieve the task object
+            task = Task.objects.get(id=id)
+
+            # Get data from request body
+            contact_id = request.data.get('contact_id')
+            log_id = Log.objects.get(id=request.data.get('log_id')) if request.data.get('log_id') else None
+            task_date_time = request.data.get('task_date_time')
+            task_detail = request.data.get('task_detail')
+            task_type = request.data.get('tasktype', 'M')  # Default to 'M' if not provided
+
+            # Update task fields
+            task.contact = Contact.objects.get(id=contact_id)
+            task.log = log_id
+            task.task_date_time = task_date_time
+            task.task_detail = task_detail
+            task.created_by = assigned_by_user  # Or request.user for dynamic assignment
+            task.tasktype = task_type
+
+            # Save updated task
+            task.save()
+
+            serializer = TaskSerializer(task)
+            return Response({"message": "Task updated successfully", "task": serializer.data}, status=status.HTTP_200_OK)
+
+        except Task.DoesNotExist:
+            return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Contact.DoesNotExist:
+            return Response({'error': 'Contact not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        try:
+            # Retrieve the task object
+            task = Task.objects.get(id=id)
+
+            if not task.is_active:
+                return Response({"message": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            # Delete the task
+            task.is_active = False
+            task.save()
+
+            return Response({"message": "Task deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+        except Task.DoesNotExist:
+            return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+    
+
+#-------------------VS-----------------------------
+class Opportunity_create(APIView):
+    def get(self,request):      
+        opportunity = Opportunity.objects.all()
+        serializer = OpportunitySerializer(opportunity, many=True)
+        return Response(serializer.data)
+    def post(self, request):
+        data = request.data.copy()
+        data.update(request.FILES)
+        
+        serializer = PostOpportunitySerializer(data=data) 
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Opportunity created", "data": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class Opportunity_ById(APIView):
+    def get(self, request, opportunity_id):
+        opportunities = Opportunity.objects.filter(lead=opportunity_id)       
+        if opportunities.exists():
+            serializer = OpportunitySerializer(opportunities, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({"error": "No opportunities found for this lead"}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self,request,opportunity_id):
+        try:
+            opportunity = Opportunity.objects.get(id=opportunity_id)
+            serializer = OpportunitySerializer(opportunity, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"message": "Opportunity updated", "data": serializer.data}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Opportunity.DoesNotExist:
+            return Response({"error": "Opportunity not found"}, status=status.HTTP_404_NOT_FOUND)
+    def delete(self,request,opportunity_id):
+        try:
+            opportunity = Opportunity.objects.get(id=opportunity_id)
+            opportunity.is_active=False
+            opportunity.save()
+            return Response({"message":"opportunity deactivate"},status=status.HTTP_204_NO_CONTENT)
+        except Opportunity.DoesNotExist:
+            return Response({"error":"opportunity not found"},status=status.HTTP_404_NOT_FOUND)
 
 
 
@@ -237,9 +501,8 @@ class LeadFilterView(APIView):
 
 
 
-
-class Contact_Create(APIView):
-
+#---------SANJESH-------------
+class ContactView(APIView):
 
     def post(self, request):
         serializer = ContactSerializer(data=request.data)
@@ -247,48 +510,59 @@ class Contact_Create(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def get(self,request):
-        contacts = Contact.objects.all()
-        serializer = ContactSerializer(contacts, many=True)
-        return Response(serializer.data)
-    
 
-class Contact_Delete(APIView):
+    def get(self, request, contact_id=None):
+        if contact_id: # Retrieve a specific contact by 'contact_id'
+            try:
+                contact = Contact.objects.get(id=contact_id)
+                serializer = ContactSerializer(contact)
+                return Response(serializer.data)
+            except Contact.DoesNotExist:
+                return Response({"error": "Contact not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            contacts = Contact.objects.all() # Retrieve all contacts if no 'id' is provided
+            serializer = ContactSerializer(contacts, many=True)
+            return Response(serializer.data)
 
-    def put(self, request,contact_id):
+    def put(self, request, contact_id=None):
+        if contact_id: # Check if 'id' is provided
+            try:
+                contact = Contact.objects.get(id=contact_id)
+                serializer = ContactSerializer(contact, data=request.data, partial=True) # Allow partial updates
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except Contact.DoesNotExist:
+                return Response({"error": "Contact not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "ID not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+    def delete(self, request,contact_id):
         try:
-            contact = Contact.objects.get(contact_id=contact_id)
+            contact = Contact.objects.get(id=contact_id)
             contact.is_active=False
             contact.save()
             return Response({"message": "Contact deactivate"}, status=status.HTTP_204_NO_CONTENT)
         except Contact.DoesNotExist:
             return Response({"error": "Contact not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-    # def delete(self,request, pk):
-    #  try:
-    #     contact = Contact.objects.get(pk=pk)
-    #     contact.delete()
-    #     return Response({"message":"contact deactivate"},status=status.HTTP_204_NO_CONTENT)
-    #  except Contact.DoesNotExist:
-    #     return Response({"error":"contact not found"},status=status.HTTP_404_NOT_FOUND)
-     
 
-class Contact_Update(APIView): 
-  
- def post(self,request,contact_id):
-    try:
-        contact = Contact.objects.get(contact_id=contact_id)
-        serializer = ContactSerializer(contact, data=request.data)
+class Contactdropdownlistview(APIView):
+    def get(self, request):
+        dropdown_type = request.query_params.get('type')
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Contact updated", "data": serializer.data}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if dropdown_type == 'contactstatus':
+            contact_status = Contact_Status.objects.all()
+            serializer = ContactStatusSerializer(contact_status, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-    except Contact.DoesNotExist:
-        return Response({"error": "Contact not found"}, status=status.HTTP_404_NOT_FOUND)
-    
+        elif dropdown_type == 'lead_source':
+            source = Lead_Source.objects.all()
+            serializer = LeadSourceSerializer(source, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response({'error': 'Invalid dropdown type'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

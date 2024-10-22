@@ -18,19 +18,37 @@ class LogReadSerializer(serializers.ModelSerializer):
     focus_segment = serializers.SerializerMethodField()
     log_stage = serializers.SerializerMethodField()
     created_by = serializers.SerializerMethodField()
-
+    logtype = serializers.SerializerMethodField()
     class Meta:
         model = Log
         fields = '__all__'
 
     def get_contact(self, obj):
-        return obj.contact.name if obj.contact else None
+        return {
+            'id': obj.contact.id,
+            'name': obj.contact.name
+        } if obj.contact else None
 
     def get_focus_segment(self, obj):
-        return obj.focus_segment.focus_segment if obj.focus_segment else None
+        return {
+            'id' : obj.focus_segment.id,
+            'name': obj.focus_segment.focus_segment
+        } if obj.focus_segment else None
 
     def get_log_stage(self, obj):
-        return obj.log_stage.stage if obj.log_stage else None
+        return {
+            'id' : obj.log_stage.id,
+            'stage' : obj.log_stage.stage
+        } if obj.log_stage else None
 
     def get_created_by(self, obj):
-        return obj.created_by.username if obj.created_by else None
+        return {
+            'id' : obj.created_by.id,
+            'username' : obj.created_by.username
+        } if obj.created_by else None
+    
+    def get_logtype(self, obj):
+        return {
+            'code': obj.logtype,
+            'label': obj.get_logtype_display()
+        }

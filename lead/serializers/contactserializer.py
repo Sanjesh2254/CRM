@@ -1,4 +1,8 @@
 from rest_framework import serializers
+from ..models import Contact, Lead, Contact_Status, Lead_Source
+from django.contrib.auth.models import User
+
+from rest_framework import serializers
 from ..models import Contact
 
 class ContactSerializer(serializers.ModelSerializer):
@@ -11,14 +15,35 @@ class ContactSerializer(serializers.ModelSerializer):
         model = Contact
         fields = '__all__'
 
-    def get_lead(self, obj):
-        return obj.lead.name if obj.lead else None
 
-    def get_status(self, obj):
-        return obj.status.status if obj.status else None
+def get_lead(self, obj):
+    if obj.lead:
+        return {"id": obj.lead.id, "lead": obj.lead.name}
+    return None
 
-    def get_lead_source(self, obj):
-        return obj.lead_source.source if obj.lead_source else None
+def get_status(self, obj):
+    if obj.status:
+        return {"id": obj.status.id, "contact_status": obj.status.status}
+    return None
 
-    def get_created_by(self, obj):
-        return obj.created_by.get_full_name() if obj.created_by else None
+
+def get_lead_source(self, obj):
+    if obj.lead_source:
+        return {"id": obj.lead_source.id, "lead_source": obj.lead_source.source}
+    return None
+
+def get_created_by(self, obj):
+    if obj.created_by:
+        return {"id": obj.created_by.id, "created_by": obj.created_by.get_full_name()}
+    return None
+class ContactStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contact_Status
+        fields = ['id','status']
+
+
+
+class LeadSourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lead_Source
+        fields = ['id','source']
