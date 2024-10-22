@@ -25,6 +25,12 @@ urlpatterns = [
     path('focus_segment_list/',focus_segment_list_view.as_view(),name='focus_segments'),
     path('market_segment_list/',market_segment_list_view.as_view(),name='market_segments'),
     path('country_list/',country_list_view.as_view(),name='countries'),
-    path('state_list/<int:country_id>/',state_list_view.as_view(),name='states')
+    path('state_list/<int:country_id>/',state_list_view.as_view(),name='states'),
+
+    #-----------Sumith---------------
+    path('create-task/', CreateTaskView.as_view(), name='create-task'),
+    path('task/<int:task_id>/', TaskManagement.as_view(), name='task'),
+    path('get-task/<int:user_id>/', UserTaskView.as_view(), name='get-task'),
+
 
 ]
