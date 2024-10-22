@@ -29,8 +29,8 @@ urlpatterns = [
 
     #-----------Sumith---------------
     path('create-task/', CreateTaskView.as_view(), name='create-task'),
-    path('task/<int:task_id>/', TaskManagement.as_view(), name='task'),
-    path('get-task/<int:user_id>/', UserTaskView.as_view(), name='get-task'),
+    path('task/<int:id>/', TaskManagement.as_view(), name='task'),
+    # path('get-task/<int:user_id>/', UserTaskView.as_view(), name='get-task'),
 
 
 ]
