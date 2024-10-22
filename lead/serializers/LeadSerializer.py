@@ -1,12 +1,20 @@
 from rest_framework import serializers
 from ..models import Lead,Employee
-from accounts.models import Focus_Segment,Market_Segment,Country,State,Tag
+from accounts.models import Focus_Segment,Market_Segment,Country,State,Tag,Vertical
 from django.contrib.auth.models import User
 
+
+class VerticalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vertical
+        fields = ['id', 'vertical'] 
+
+
 class FocusSegmentSerializer(serializers.ModelSerializer):
+    vertical = VerticalSerializer(read_only=True)
     class Meta:
         model = Focus_Segment
-        fields = ['id','focus_segment']
+        fields = ['id','focus_segment','vertical']
     
 class MarketSegmentSerializer(serializers.ModelSerializer):
     class Meta:
